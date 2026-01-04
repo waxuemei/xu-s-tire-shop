@@ -1,0 +1,2518 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <title>许氏轮胎店 - Firebase云端同步版</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif;
+            background: #1a1f3a;
+            min-height: 100vh;
+            color: #fff;
+            overflow-x: hidden;
+        }
+
+        .page {
+            display: none;
+            min-height: 100vh;
+            padding-bottom: 80px;
+        }
+
+        .page.active {
+            display: block;
+        }
+
+        .header {
+            background: #1a1f3a;
+            padding: 16px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+        }
+
+        .header-logo {
+            width: 40px;
+            height: 40px;
+            background: #4a7aff;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            margin-right: 12px;
+        }
+
+        .header-title h2 {
+            font-size: 16px;
+            font-weight: bold;
+        }
+
+        .header-title p {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.5);
+            margin-top: 2px;
+        }
+
+        .header-logout {
+            font-size: 24px;
+            cursor: pointer;
+            padding: 8px;
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .back-btn {
+            font-size: 28px;
+            cursor: pointer;
+            margin-right: 16px;
+            color: #4a7aff;
+        }
+
+        .welcome-page {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+
+        .app-logo {
+            width: 100px;
+            height: 100px;
+            background: #4a7aff;
+            border-radius: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 20px;
+            font-size: 48px;
+        }
+
+        .app-title {
+            font-size: 28px;
+            font-weight: bold;
+            margin-bottom: 60px;
+        }
+
+        .role-card {
+            width: 100%;
+            max-width: 500px;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 16px;
+            padding: 24px;
+            margin: 12px 0;
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .role-card:hover {
+            background: rgba(255, 255, 255, 0.12);
+            transform: translateY(-2px);
+        }
+
+        .role-card.boss {
+            background: rgba(42, 48, 74, 0.8);
+        }
+
+        .role-icon {
+            width: 56px;
+            height: 56px;
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            margin-right: 20px;
+        }
+
+        .role-info h3 {
+            font-size: 20px;
+            margin-bottom: 6px;
+        }
+
+        .role-info p {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .role-arrow {
+            margin-left: auto;
+            font-size: 24px;
+            color: rgba(255, 255, 255, 0.4);
+        }
+
+        .login-page {
+            padding: 40px 20px;
+        }
+
+        .login-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 40px;
+        }
+
+        .login-title {
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.8);
+            margin-bottom: 8px;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 14px 16px;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            color: #fff;
+            font-size: 16px;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #4a7aff;
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .form-group input[readonly] {
+            background: rgba(255, 255, 255, 0.03);
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .btn {
+            width: 100%;
+            padding: 16px;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: #4a7aff;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #3a6aef;
+        }
+
+        .btn-success {
+            background: #34d399;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #24c389;
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            margin-top: 12px;
+        }
+
+        .btn-danger {
+            background: #ef4444;
+            color: white;
+        }
+
+        .small-link {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .small-link a {
+            color: #4a7aff;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .content {
+            padding: 20px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            padding: 20px;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .stat-label {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.6);
+            margin-bottom: 8px;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #4a7aff;
+        }
+
+        .profit-card {
+            background: linear-gradient(135deg, #34d399 0%, #10b981 100%);
+            border-radius: 16px;
+            padding: 24px;
+            margin: 20px 20px 20px;
+        }
+
+        .profit-label {
+            font-size: 14px;
+            opacity: 0.9;
+            margin-bottom: 8px;
+        }
+
+        .profit-value {
+            font-size: 36px;
+            font-weight: bold;
+        }
+
+        .tabs {
+            display: flex;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 4px;
+            margin: 0 20px 20px;
+        }
+
+        .tab {
+            flex: 1;
+            padding: 12px;
+            text-align: center;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .tab.active {
+            background: #4a7aff;
+            color: white;
+        }
+
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: #242a45;
+            display: flex;
+            justify-content: space-around;
+            padding: 12px 0 16px;
+            box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.3);
+            z-index: 100;
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            cursor: pointer;
+            padding: 8px 16px;
+            border-radius: 12px;
+            transition: all 0.3s;
+        }
+
+        .nav-item.active {
+            background: rgba(74, 122, 255, 0.2);
+        }
+
+        .nav-icon {
+            font-size: 24px;
+            margin-bottom: 4px;
+        }
+
+        .nav-item.active .nav-icon {
+            color: #4a7aff;
+        }
+
+        .nav-label {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .nav-item.active .nav-label {
+            color: #4a7aff;
+        }
+
+        .section-title {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.5);
+            padding: 0 20px 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .record-list {
+            padding: 0 20px 20px;
+        }
+
+        .record-item {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 12px;
+        }
+
+        .record-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+
+        .record-title {
+            font-size: 16px;
+            font-weight: bold;
+        }
+
+        .record-price {
+            font-size: 18px;
+            color: #34d399;
+            font-weight: bold;
+        }
+
+        .record-detail {
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.6);
+            line-height: 1.6;
+        }
+
+        .inventory-list {
+            padding: 0 20px 20px;
+        }
+
+        .inventory-item {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .inventory-info {
+            flex: 1;
+        }
+
+        .inventory-brand {
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 4px;
+        }
+
+        .inventory-model {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.6);
+            margin-bottom: 4px;
+        }
+
+        .inventory-price {
+            font-size: 12px;
+            color: #4a7aff;
+        }
+
+        .inventory-count {
+            background: #4a7aff;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: bold;
+        }
+
+        .search-box {
+            padding: 0 20px 16px;
+        }
+
+        .search-input-wrapper {
+            position: relative;
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: rgba(255, 255, 255, 0.4);
+            font-size: 20px;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 14px 16px 14px 48px;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            color: #fff;
+            font-size: 16px;
+        }
+
+        .fab {
+            position: fixed;
+            bottom: 100px;
+            right: 20px;
+            width: 60px;
+            height: 60px;
+            background: #4a7aff;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(74, 122, 255, 0.4);
+            z-index: 99;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: rgba(255, 255, 255, 0.4);
+        }
+
+        .empty-icon {
+            font-size: 48px;
+            margin-bottom: 12px;
+        }
+
+        .form-card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            padding: 20px;
+            margin: 0 20px 20px;
+        }
+
+        .form-card h3 {
+            margin-bottom: 16px;
+            font-size: 18px;
+        }
+
+        select {
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23ffffff' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 16px center;
+            padding-right: 40px;
+        }
+
+        select option {
+            background: #242a45;
+            color: #fff;
+            padding: 10px;
+        }
+
+        .other-inputs {
+            display: none;
+        }
+
+        .other-inputs.show {
+            display: block;
+        }
+
+        .approved-badge {
+            display: inline-block;
+            background: #34d399;
+            color: white;
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            margin-left: 10px;
+        }
+
+        .sync-indicator {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            background: rgba(52, 211, 153, 0.9);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+            z-index: 1000;
+            display: none;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        .sync-indicator.syncing {
+            background: rgba(74, 122, 255, 0.9);
+            display: flex;
+        }
+
+        .sync-indicator.error {
+            background: rgba(239, 68, 68, 0.9);
+            display: flex;
+        }
+
+        .sync-indicator .spinner {
+            width: 12px;
+            height: 12px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        @media (max-width: 480px) {
+            .app-title {
+                font-size: 24px;
+            }
+
+            .role-card {
+                padding: 20px;
+            }
+
+            .stat-value {
+                font-size: 20px;
+            }
+
+            .profit-value {
+                font-size: 28px;
+            }
+        }
+    </style>
+
+    <!-- Firebase SDK 模块化导入 -->
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getDatabase, ref, set, get, onValue } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBESEcLq8v9ChKerWh2egh_SyLRxlbHVqU",
+            authDomain: "finance-7c50c.firebaseapp.com",
+            projectId: "finance-7c50c",
+            storageBucket: "finance-7c50c.firebasestorage.app",
+            messagingSenderId: "790824328676",
+            appId: "1:790824328676:web:e0fc581d972b9ce0c2bbf1"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const database = getDatabase(app);
+
+        window.firebaseDB = database;
+        window.firebaseRef = ref;
+        window.firebaseSet = set;
+        window.firebaseGet = get;
+        window.firebaseOnValue = onValue;
+
+        console.log('Firebase initialized successfully');
+    </script>
+</head>
+<body>
+    <!-- 同步指示器 -->
+    <div id="syncIndicator" class="sync-indicator">
+        <div class="spinner"></div>
+        <span id="syncText">同步中...</span>
+    </div>
+
+    <!-- 页面1: 欢迎页 -->
+    <div id="welcomePage" class="page active welcome-page">
+        <div class="app-logo">👥</div>
+        <h1 class="app-title">许氏轮胎店</h1>
+
+        <div class="role-card" onclick="goToPage('employeeLoginPage')">
+            <div class="role-icon">🔧</div>
+            <div class="role-info">
+                <h3>我是员工</h3>
+                <p>记账/查询</p>
+            </div>
+            <div class="role-arrow">→</div>
+        </div>
+
+        <div class="role-card boss" onclick="checkBossAutoLogin()">
+            <div class="role-icon">🛡️</div>
+            <div class="role-info">
+                <h3>我是老板</h3>
+                <p>管理/利润</p>
+            </div>
+            <div class="role-arrow">→</div>
+        </div>
+
+        <div style="margin-top: 40px; text-align: center; font-size: 12px; color: rgba(255,255,255,0.4);">
+            Firebase云端同步版 v3.0<br>
+            <span style="font-size: 10px;">实时多设备云端同步</span>
+        </div>
+    </div>
+
+    <!-- 页面2: 员工登录 -->
+    <div id="employeeLoginPage" class="page login-page">
+        <div class="login-header">
+            <div class="back-btn" onclick="goToPage('welcomePage')">←</div>
+            <h2 class="login-title">员工登录</h2>
+        </div>
+
+        <div class="form-group">
+            <label>员工姓名</label>
+            <input type="text" id="empLoginName" placeholder="请输入姓名">
+        </div>
+        <div class="form-group">
+            <label>登录密码</label>
+            <input type="password" id="empLoginPassword" placeholder="请输入密码">
+        </div>
+        <button class="btn btn-primary" onclick="loginEmployee()">登录</button>
+
+        <div class="small-link">
+            <a onclick="goToPage('employeeRegisterPage')">还没有账号？去注册</a>
+        </div>
+    </div>
+
+    <!-- 页面3: 员工注册 -->
+    <div id="employeeRegisterPage" class="page login-page">
+        <div class="login-header">
+            <div class="back-btn" onclick="goToPage('employeeLoginPage')">←</div>
+            <h2 class="login-title">员工注册</h2>
+        </div>
+
+        <div class="form-group">
+            <label>员工姓名</label>
+            <input type="text" id="empRegName" placeholder="请输入姓名">
+        </div>
+        <div class="form-group">
+            <label>设置密码</label>
+            <input type="password" id="empRegPassword" placeholder="请设置登录密码">
+        </div>
+        <div class="form-group">
+            <label>确认密码</label>
+            <input type="password" id="empRegPasswordConfirm" placeholder="请再次输入密码">
+        </div>
+        <button class="btn btn-success" onclick="registerEmployee()">提交注册</button>
+    </div>
+
+    <!-- 页面4: 老板登录 -->
+    <div id="bossLoginPage" class="page login-page">
+        <div class="login-header">
+            <div class="back-btn" onclick="goToPage('welcomePage')">←</div>
+            <h2 class="login-title">老板登录</h2>
+        </div>
+
+        <div class="form-group">
+            <label>老板密码</label>
+            <input type="password" id="bossLoginPassword" placeholder="请输入老板密码">
+        </div>
+        <button class="btn btn-success" onclick="loginBoss()">登录</button>
+    </div>
+
+    <!-- 老板PIN验证页面 -->
+    <div id="bossPinPage" class="page login-page">
+        <div class="login-header">
+            <div class="back-btn" onclick="goToPage('welcomePage')">←</div>
+            <h2 class="login-title">快速登录</h2>
+        </div>
+
+        <div class="form-group">
+            <label>输入PIN码</label>
+            <input type="password" id="bossPinInput" placeholder="请输入PIN码" maxlength="4">
+        </div>
+        <button class="btn btn-success" onclick="verifyBossPin()">确认</button>
+    </div>
+
+    <!-- 页面5: 员工主页 -->
+    <div id="employeeMainPage" class="page">
+        <div class="header">
+            <div class="header-left">
+                <div class="header-logo">🔧</div>
+                <div class="header-title">
+                    <h2>许氏轮胎店</h2>
+                    <p id="empNameDisplay">员工端</p>
+                </div>
+            </div>
+            <div class="header-logout" onclick="logout()">⊗</div>
+        </div>
+
+        <div class="section-title">
+            <span>今日记录</span>
+            <span id="empTodayDate"></span>
+        </div>
+
+        <div class="record-list" id="empTodayRecords"></div>
+
+        <div class="bottom-nav">
+            <div class="nav-item active" onclick="switchEmpTab('main')">
+                <div class="nav-icon">📊</div>
+                <div class="nav-label">概览</div>
+            </div>
+            <div class="nav-item" onclick="switchEmpTab('change')">
+                <div class="nav-icon">🔧</div>
+                <div class="nav-label">换胎</div>
+            </div>
+            <div class="nav-item" onclick="switchEmpTab('repair')">
+                <div class="nav-icon">🔧</div>
+                <div class="nav-label">补胎</div>
+            </div>
+            <div class="nav-item" onclick="switchEmpTab('other')">
+                <div class="nav-icon">✨</div>
+                <div class="nav-label">其他</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 页面6: 员工换胎 -->
+    <div id="employeeChangePage" class="page">
+        <div class="header">
+            <div class="header-left">
+                <div class="header-logo">🔧</div>
+                <div class="header-title">
+                    <h2>许氏轮胎店</h2>
+                    <p id="empNameDisplay2">员工端</p>
+                </div>
+            </div>
+            <div class="header-logout" onclick="logout()">⊗</div>
+        </div>
+
+        <div class="form-card">
+            <h3>换胎记录</h3>
+            <div class="form-group">
+                <label>日期时间</label>
+                <input type="datetime-local" id="empChangeDate">
+            </div>
+            <div class="form-group">
+                <label>选择轮胎</label>
+                <select id="empChangeTire" onchange="handleEmpTireSelect()">
+                    <option value="">-- 请选择 --</option>
+                </select>
+            </div>
+            <div id="empChangeOtherInputs" class="other-inputs">
+                <div class="form-group">
+                    <label>轮胎品牌</label>
+                    <input type="text" id="empChangeOtherBrand" placeholder="请输入品牌">
+                </div>
+                <div class="form-group">
+                    <label>轮胎型号</label>
+                    <input type="text" id="empChangeOtherModel" placeholder="请输入型号">
+                </div>
+            </div>
+            <div class="form-group">
+                <label>数量</label>
+                <input type="number" id="empChangeQty" placeholder="换几条胎" min="1" oninput="calcEmpChangeTotal()">
+            </div>
+            <div class="form-group">
+                <label>单价</label>
+                <input type="number" id="empChangePrice" placeholder="每条售价" step="0.01" oninput="calcEmpChangeTotal()">
+            </div>
+            <div class="form-group">
+                <label>总计</label>
+                <input type="text" id="empChangeTotal" placeholder="自动计算" readonly>
+            </div>
+            <button class="btn btn-primary" onclick="submitEmpChange()">确认销售</button>
+        </div>
+
+        <div class="bottom-nav">
+            <div class="nav-item" onclick="switchEmpTab('main')">
+                <div class="nav-icon">📊</div>
+                <div class="nav-label">概览</div>
+            </div>
+            <div class="nav-item active" onclick="switchEmpTab('change')">
+                <div class="nav-icon">🔧</div>
+                <div class="nav-label">换胎</div>
+            </div>
+            <div class="nav-item" onclick="switchEmpTab('repair')">
+                <div class="nav-icon">🔧</div>
+                <div class="nav-label">补胎</div>
+            </div>
+            <div class="nav-item" onclick="switchEmpTab('other')">
+                <div class="nav-icon">✨</div>
+                <div class="nav-label">其他</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 页面7: 员工补胎 -->
+    <div id="employeeRepairPage" class="page">
+        <div class="header">
+            <div class="header-left">
+                <div class="header-logo">🔧</div>
+                <div class="header-title">
+                    <h2>许氏轮胎店</h2>
+                    <p id="empNameDisplay3">员工端</p>
+                </div>
+            </div>
+            <div class="header-logout" onclick="logout()">⊗</div>
+        </div>
+
+        <div class="form-card">
+            <h3>补胎记录</h3>
+            <div class="form-group">
+                <label>日期时间</label>
+                <input type="datetime-local" id="empRepairDate">
+            </div>
+            <div class="form-group">
+                <label>数量</label>
+                <input type="number" id="empRepairQty" placeholder="补几条胎" min="1">
+            </div>
+            <div class="form-group">
+                <label>价格</label>
+                <input type="number" id="empRepairPrice" placeholder="总价格" step="0.01">
+            </div>
+            <button class="btn btn-primary" onclick="submitEmpRepair()">确认销售</button>
+        </div>
+
+        <div class="bottom-nav">
+            <div class="nav-item" onclick="switchEmpTab('main')">
+                <div class="nav-icon">📊</div>
+                <div class="nav-label">概览</div>
+            </div>
+            <div class="nav-item" onclick="switchEmpTab('change')">
+                <div class="nav-icon">🔧</div>
+                <div class="nav-label">换胎</div>
+            </div>
+            <div class="nav-item active" onclick="switchEmpTab('repair')">
+                <div class="nav-icon">🔧</div>
+                <div class="nav-label">补胎</div>
+            </div>
+            <div class="nav-item" onclick="switchEmpTab('other')">
+                <div class="nav-icon">✨</div>
+                <div class="nav-label">其他</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 页面8: 员工其他业务 -->
+    <div id="employeeOtherPage" class="page">
+        <div class="header">
+            <div class="header-left">
+                <div class="header-logo">🔧</div>
+                <div class="header-title">
+                    <h2>许氏轮胎店</h2>
+                    <p id="empNameDisplay4">员工端</p>
+                </div>
+            </div>
+            <div class="header-logout" onclick="logout()">⊗</div>
+        </div>
+
+        <div class="form-card">
+            <h3>其他业务</h3>
+            <div class="form-group">
+                <label>日期时间</label>
+                <input type="datetime-local" id="empOtherDate">
+            </div>
+            <div class="form-group">
+                <label>业务事项</label>
+                <textarea id="empOtherDesc" placeholder="请描述业务内容" rows="3" style="resize: vertical;"></textarea>
+            </div>
+            <div class="form-group">
+                <label>收款金额</label>
+                <input type="number" id="empOtherAmount" placeholder="请输入金额" step="0.01">
+            </div>
+            <button class="btn btn-primary" onclick="submitEmpOther()">确认提交</button>
+        </div>
+
+        <div class="bottom-nav">
+            <div class="nav-item" onclick="switchEmpTab('main')">
+                <div class="nav-icon">📊</div>
+                <div class="nav-label">概览</div>
+            </div>
+            <div class="nav-item" onclick="switchEmpTab('change')">
+                <div class="nav-icon">🔧</div>
+                <div class="nav-label">换胎</div>
+            </div>
+            <div class="nav-item" onclick="switchEmpTab('repair')">
+                <div class="nav-icon">🔧</div>
+                <div class="nav-label">补胎</div>
+            </div>
+            <div class="nav-item active" onclick="switchEmpTab('other')">
+                <div class="nav-icon">✨</div>
+                <div class="nav-label">其他</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 页面9: 老板主页 -->
+    <div id="bossMainPage" class="page">
+        <div class="header">
+            <div class="header-left">
+                <div class="header-logo">👔</div>
+                <div class="header-title">
+                    <h2>许氏轮胎店</h2>
+                    <p>老板端 · Boss</p>
+                </div>
+            </div>
+            <div class="header-logout" onclick="logout()">⊗</div>
+        </div>
+
+        <div class="profit-card">
+            <div class="profit-label">今日毛利</div>
+            <div class="profit-value" id="bossTodayProfit">¥0</div>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-label">今日营业额</div>
+                <div class="stat-value" id="bossTodayRevenue">¥0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">今日单量</div>
+                <div class="stat-value" id="bossTodayOrders">0 单</div>
+            </div>
+        </div>
+
+        <div class="section-title">
+            <span>今日记录</span>
+            <span id="bossTodayDate"></span>
+        </div>
+
+        <div class="record-list" id="bossTodayRecords"></div>
+
+        <div class="bottom-nav">
+            <div class="nav-item active" onclick="switchBossTab('main')">
+                <div class="nav-icon">📊</div>
+                <div class="nav-label">概览</div>
+            </div>
+            <div class="nav-item" onclick="switchBossTab('record')">
+                <div class="nav-icon">🔧</div>
+                <div class="nav-label">记账</div>
+            </div>
+            <div class="nav-item" onclick="switchBossTab('inventory')">
+                <div class="nav-icon">📦</div>
+                <div class="nav-label">仓库</div>
+            </div>
+            <div class="nav-item" onclick="switchBossTab('more')">
+                <div class="nav-icon">✨</div>
+                <div class="nav-label">更多</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 页面10: 老板记账 -->
+    <div id="bossRecordPage" class="page">
+        <div class="header">
+            <div class="header-left">
+                <div class="header-logo">👔</div>
+                <div class="header-title">
+                    <h2>许氏轮胎店</h2>
+                    <p>老板端 · Boss</p>
+                </div>
+            </div>
+            <div class="header-logout" onclick="logout()">⊗</div>
+        </div>
+
+        <div class="tabs">
+            <div class="tab active" onclick="switchBossRecordTab('change')">换胎</div>
+            <div class="tab" onclick="switchBossRecordTab('repair')">补胎</div>
+            <div class="tab" onclick="switchBossRecordTab('other')">其他业务</div>
+        </div>
+
+        <div id="bossRecordChange" class="content">
+            <div class="form-card" style="margin: 0;">
+                <h3>换胎记录</h3>
+                <div class="form-group">
+                    <label>日期时间</label>
+                    <input type="datetime-local" id="bossChangeDate">
+                </div>
+                <div class="form-group">
+                    <label>选择轮胎</label>
+                    <select id="bossChangeTire" onchange="handleBossTireSelect()">
+                        <option value="">-- 请选择 --</option>
+                    </select>
+                </div>
+                <div id="bossChangeOtherInputs" class="other-inputs">
+                    <div class="form-group">
+                        <label>轮胎品牌</label>
+                        <input type="text" id="bossChangeOtherBrand" placeholder="请输入品牌">
+                    </div>
+                    <div class="form-group">
+                        <label>轮胎型号</label>
+                        <input type="text" id="bossChangeOtherModel" placeholder="请输入型号">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>数量</label>
+                    <input type="number" id="bossChangeQty" placeholder="换几条胎" min="1" oninput="calcBossChangeTotal()">
+                </div>
+                <div class="form-group">
+                    <label>单价</label>
+                    <input type="number" id="bossChangePrice" placeholder="每条售价" step="0.01" oninput="calcBossChangeTotal()">
+                </div>
+                <div class="form-group">
+                    <label>总计</label>
+                    <input type="text" id="bossChangeTotal" placeholder="自动计算" readonly>
+                </div>
+                <button class="btn btn-primary" onclick="submitBossChange()">确认销售</button>
+            </div>
+        </div>
+
+        <div id="bossRecordRepair" class="content" style="display:none;">
+            <div class="form-card" style="margin: 0;">
+                <h3>补胎记录</h3>
+                <div class="form-group">
+                    <label>日期时间</label>
+                    <input type="datetime-local" id="bossRepairDate">
+                </div>
+                <div class="form-group">
+                    <label>数量</label>
+                    <input type="number" id="bossRepairQty" placeholder="补几条胎" min="1">
+                </div>
+                <div class="form-group">
+                    <label>价格</label>
+                    <input type="number" id="bossRepairPrice" placeholder="总价格" step="0.01">
+                </div>
+                <button class="btn btn-primary" onclick="submitBossRepair()">确认销售</button>
+            </div>
+        </div>
+
+        <div id="bossRecordOther" class="content" style="display:none;">
+            <div class="form-card" style="margin: 0;">
+                <h3>其他业务</h3>
+                <div class="form-group">
+                    <label>日期时间</label>
+                    <input type="datetime-local" id="bossOtherDate">
+                </div>
+                <div class="form-group">
+                    <label>业务事项</label>
+                    <textarea id="bossOtherDesc" placeholder="请描述业务内容" rows="3" style="resize: vertical;"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>收款金额</label>
+                    <input type="number" id="bossOtherAmount" placeholder="请输入金额" step="0.01">
+                </div>
+                <button class="btn btn-primary" onclick="submitBossOther()">确认提交</button>
+            </div>
+        </div>
+
+        <div class="bottom-nav">
+            <div class="nav-item" onclick="switchBossTab('main')">
+                <div class="nav-icon">📊</div>
+                <div class="nav-label">概览</div>
+            </div>
+            <div class="nav-item active" onclick="switchBossTab('record')">
+                <div class="nav-icon">🔧</div>
+                <div class="nav-label">记账</div>
+            </div>
+            <div class="nav-item" onclick="switchBossTab('inventory')">
+                <div class="nav-icon">📦</div>
+                <div class="nav-label">仓库</div>
+            </div>
+            <div class="nav-item" onclick="switchBossTab('more')">
+                <div class="nav-icon">✨</div>
+                <div class="nav-label">更多</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 页面11: 老板仓库 -->
+    <div id="bossInventoryPage" class="page">
+        <div class="header">
+            <div class="header-left">
+                <div class="header-logo">👔</div>
+                <div class="header-title">
+                    <h2>许氏轮胎店</h2>
+                    <p>老板端 · Boss</p>
+                </div>
+            </div>
+            <div class="header-logout" onclick="logout()">⊗</div>
+        </div>
+
+        <div class="search-box">
+            <div class="search-input-wrapper">
+                <span class="search-icon">🔍</span>
+                <input type="text" class="search-input" id="inventorySearch" placeholder="搜索品牌/规格" oninput="searchInventory()">
+            </div>
+        </div>
+
+        <div class="inventory-list" id="inventoryList"></div>
+
+        <div class="fab" onclick="goToPage('bossAddStockPage')">+</div>
+
+        <div class="bottom-nav">
+            <div class="nav-item" onclick="switchBossTab('main')">
+                <div class="nav-icon">📊</div>
+                <div class="nav-label">概览</div>
+            </div>
+            <div class="nav-item" onclick="switchBossTab('record')">
+                <div class="nav-icon">🔧</div>
+                <div class="nav-label">记账</div>
+            </div>
+            <div class="nav-item active" onclick="switchBossTab('inventory')">
+                <div class="nav-icon">📦</div>
+                <div class="nav-label">仓库</div>
+            </div>
+            <div class="nav-item" onclick="switchBossTab('more')">
+                <div class="nav-icon">✨</div>
+                <div class="nav-label">更多</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 页面12: 添加进货 -->
+    <div id="bossAddStockPage" class="page login-page">
+        <div class="login-header">
+            <div class="back-btn" onclick="switchBossTab('inventory')">←</div>
+            <h2 class="login-title">录入进货</h2>
+        </div>
+
+        <div class="form-group">
+            <label>日期时间</label>
+            <input type="datetime-local" id="stockDate">
+        </div>
+        <div class="form-group">
+            <label>轮胎品牌</label>
+            <input type="text" id="stockBrand" placeholder="例如:米其林">
+        </div>
+        <div class="form-group">
+            <label>轮胎型号</label>
+            <input type="text" id="stockModel" placeholder="例如:195/65R15">
+        </div>
+        <div class="form-group">
+            <label>数量</label>
+            <input type="number" id="stockQty" placeholder="进货数量" min="1">
+        </div>
+        <div class="form-group">
+            <label>进价（单价）</label>
+            <input type="number" id="stockPrice" placeholder="每条进货价" step="0.01">
+        </div>
+        <button class="btn btn-success" onclick="submitStock()">确认进货</button>
+    </div>
+
+    <!-- 页面13: 老板更多 -->
+    <div id="bossMorePage" class="page">
+        <div class="header">
+            <div class="header-left">
+                <div class="header-logo">👔</div>
+                <div class="header-title">
+                    <h2>许氏轮胎店</h2>
+                    <p>老板端 · Boss</p>
+                </div>
+            </div>
+            <div class="header-logout" onclick="logout()">⊗</div>
+        </div>
+
+        <div class="content">
+            <div class="role-card" onclick="goToPage('bossApprovalPage')" style="max-width: 100%;">
+                <div class="role-icon">👥</div>
+                <div class="role-info">
+                    <h3>审核员工</h3>
+                    <p>批准员工注册申请</p>
+                </div>
+                <div class="role-arrow">→</div>
+            </div>
+
+            <div class="role-card" onclick="goToPage('bossHistoryPage')" style="max-width: 100%;">
+                <div class="role-icon">📈</div>
+                <div class="role-info">
+                    <h3>历史报表</h3>
+                    <p>查看历史日期利润统计</p>
+                </div>
+                <div class="role-arrow">→</div>
+            </div>
+
+            <div class="role-card" onclick="goToPage('bossEmployeeManagePage')" style="max-width: 100%;">
+                <div class="role-icon">👨‍💼</div>
+                <div class="role-info">
+                    <h3>员工管理</h3>
+                    <p>查看所有员工列表</p>
+                </div>
+                <div class="role-arrow">→</div>
+            </div>
+
+            <div class="role-card" onclick="goToPage('bossChangePasswordPage')" style="max-width: 100%;">
+                <div class="role-icon">🔐</div>
+                <div class="role-info">
+                    <h3>修改密码</h3>
+                    <p>修改老板登录密码</p>
+                </div>
+                <div class="role-arrow">→</div>
+            </div>
+
+            <div class="role-card" onclick="goToPage('bossSettingsPage')" style="max-width: 100%;">
+                <div class="role-icon">⚙️</div>
+                <div class="role-info">
+                    <h3>系统设置</h3>
+                    <p>其他设置选项</p>
+                </div>
+                <div class="role-arrow">→</div>
+            </div>
+        </div>
+
+        <div class="bottom-nav">
+            <div class="nav-item" onclick="switchBossTab('main')">
+                <div class="nav-icon">📊</div>
+                <div class="nav-label">概览</div>
+            </div>
+            <div class="nav-item" onclick="switchBossTab('record')">
+                <div class="nav-icon">🔧</div>
+                <div class="nav-label">记账</div>
+            </div>
+            <div class="nav-item" onclick="switchBossTab('inventory')">
+                <div class="nav-icon">📦</div>
+                <div class="nav-label">仓库</div>
+            </div>
+            <div class="nav-item active" onclick="switchBossTab('more')">
+                <div class="nav-icon">✨</div>
+                <div class="nav-label">更多</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 页面14: 审核员工 -->
+    <div id="bossApprovalPage" class="page login-page">
+        <div class="login-header">
+            <div class="back-btn" onclick="switchBossTab('more')">←</div>
+            <h2 class="login-title">审核员工</h2>
+        </div>
+
+        <div class="content" id="approvalList"></div>
+    </div>
+
+    <!-- 页面15: 历史报表 -->
+    <div id="bossHistoryPage" class="page login-page">
+        <div class="login-header">
+            <div class="back-btn" onclick="switchBossTab('more')">←</div>
+            <h2 class="login-title">历史报表</h2>
+        </div>
+
+        <div class="form-group">
+            <label>选择日期</label>
+            <input type="date" id="historyDate">
+        </div>
+        <button class="btn btn-primary" onclick="loadHistoryReport()">查看当日利润</button>
+
+        <div id="historyDisplay"></div>
+    </div>
+
+    <!-- 页面16: 员工管理 -->
+    <div id="bossEmployeeManagePage" class="page login-page">
+        <div class="login-header">
+            <div class="back-btn" onclick="switchBossTab('more')">←</div>
+            <h2 class="login-title">员工管理</h2>
+        </div>
+
+        <div class="content" id="employeeManageList"></div>
+    </div>
+
+    <!-- 页面17: 修改密码 -->
+    <div id="bossChangePasswordPage" class="page login-page">
+        <div class="login-header">
+            <div class="back-btn" onclick="switchBossTab('more')">←</div>
+            <h2 class="login-title">修改密码</h2>
+        </div>
+
+        <div class="form-group">
+            <label>当前密码</label>
+            <input type="password" id="currentPassword" placeholder="请输入当前密码">
+        </div>
+        <div class="form-group">
+            <label>新密码</label>
+            <input type="password" id="newPassword" placeholder="请输入新密码">
+        </div>
+        <div class="form-group">
+            <label>确认新密码</label>
+            <input type="password" id="confirmNewPassword" placeholder="请再次输入新密码">
+        </div>
+        <button class="btn btn-primary" onclick="changeBossPassword()">确认修改</button>
+    </div>
+
+    <!-- 页面18: 系统设置 -->
+    <div id="bossSettingsPage" class="page login-page">
+        <div class="login-header">
+            <div class="back-btn" onclick="switchBossTab('more')">←</div>
+            <h2 class="login-title">系统设置</h2>
+        </div>
+
+        <div class="content">
+            <div class="record-item">
+                <div class="record-header">
+                    <div class="record-title">清空所有数据</div>
+                </div>
+                <div class="record-detail">删除所有业务记录、库存、员工等数据</div>
+                <button class="btn btn-danger" style="margin-top: 12px;" onclick="clearAllData()">清空数据</button>
+            </div>
+
+            <div class="record-item">
+                <div class="record-header">
+                    <div class="record-title">关于</div>
+                </div>
+                <div class="record-detail">
+                    软件名称：许氏轮胎店记账系统<br>
+                    版本号：v3.0 Firebase云端版<br>
+                    说明：实时云端同步，多设备数据一致
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+// ==================== Firebase云端同步函数 ====================
+async function saveToCloud(key, data) {
+    if (!window.firebaseDB) {
+        console.warn('Firebase not initialized');
+        return;
+    }
+
+    try {
+        showSyncIndicator('syncing');
+        const dbRef = window.firebaseRef(window.firebaseDB, 'tireShop/' + key);
+        await window.firebaseSet(dbRef, data);
+        showSyncIndicator('success');
+        console.log('Data saved to cloud:', key);
+    } catch (error) {
+        console.error('Cloud sync error:', error);
+        showSyncIndicator('error');
+    }
+}
+
+async function loadFromCloud(key) {
+    if (!window.firebaseDB) {
+        console.warn('Firebase not initialized');
+        return null;
+    }
+
+    try {
+        const dbRef = window.firebaseRef(window.firebaseDB, 'tireShop/' + key);
+        const snapshot = await window.firebaseGet(dbRef);
+        if (snapshot.exists()) {
+            return snapshot.val();
+        }
+        return null;
+    } catch (error) {
+        console.error('Cloud load error:', error);
+        return null;
+    }
+}
+
+function setupRealtimeSync() {
+    if (!window.firebaseDB) {
+        console.warn('Firebase not initialized');
+        return;
+    }
+
+    const keys = ['employees', 'tireChanges', 'tireRepairs', 'otherBusiness', 'stockRecords', 'inventory', 'bossPassword', 'bossPIN'];
+
+    keys.forEach(key => {
+        const dbRef = window.firebaseRef(window.firebaseDB, 'tireShop/' + key);
+        window.firebaseOnValue(dbRef, (snapshot) => {
+            if (snapshot.exists()) {
+                const data = snapshot.val();
+                const currentData = localStorage.getItem(key);
+                const cloudData = typeof data === 'string' ? data : JSON.stringify(data);
+
+                if (currentData !== cloudData) {
+                    localStorage.setItem(key, cloudData);
+                    console.log('Real-time sync updated:', key);
+
+                    // 如果当前页面需要刷新数据
+                    const activePage = document.querySelector('.page.active');
+                    if (activePage) {
+                        const pageId = activePage.id;
+                        if (pageId === 'employeeMainPage') loadEmpMainPage();
+                        if (pageId === 'bossMainPage') loadBossMainPage();
+                        if (pageId === 'bossInventoryPage') loadInventory();
+                        if (pageId === 'bossApprovalPage') loadApprovalList();
+                        if (pageId === 'bossEmployeeManagePage') loadEmployeeManageList();
+                    }
+                }
+            }
+        });
+    });
+}
+
+function showSyncIndicator(status) {
+    const indicator = document.getElementById('syncIndicator');
+    const text = document.getElementById('syncText');
+
+    indicator.className = 'sync-indicator';
+
+    if (status === 'syncing') {
+        indicator.classList.add('syncing');
+        text.textContent = '同步中...';
+    } else if (status === 'success') {
+        indicator.classList.remove('syncing');
+        indicator.style.display = 'flex';
+        indicator.style.background = 'rgba(52, 211, 153, 0.9)';
+        text.textContent = '已同步';
+        setTimeout(() => {
+            indicator.style.display = 'none';
+        }, 2000);
+    } else if (status === 'error') {
+        indicator.classList.add('error');
+        text.textContent = '同步失败';
+        setTimeout(() => {
+            indicator.style.display = 'none';
+        }, 3000);
+    }
+}
+
+// ==================== 初始化数据 ====================
+function initData() {
+    if (!localStorage.getItem('employees')) {
+        localStorage.setItem('employees', JSON.stringify([]));
+    }
+    if (!localStorage.getItem('tireChanges')) {
+        localStorage.setItem('tireChanges', JSON.stringify([]));
+    }
+    if (!localStorage.getItem('tireRepairs')) {
+        localStorage.setItem('tireRepairs', JSON.stringify([]));
+    }
+    if (!localStorage.getItem('otherBusiness')) {
+        localStorage.setItem('otherBusiness', JSON.stringify([]));
+    }
+    if (!localStorage.getItem('stockRecords')) {
+        localStorage.setItem('stockRecords', JSON.stringify([]));
+    }
+    if (!localStorage.getItem('inventory')) {
+        localStorage.setItem('inventory', JSON.stringify([]));
+    }
+    if (!localStorage.getItem('bossPassword')) {
+        localStorage.setItem('bossPassword', '123456');
+    }
+    if (!localStorage.getItem('bossPIN')) {
+        localStorage.setItem('bossPIN', '2468');
+    }
+}
+
+// ==================== 页面切换 ====================
+function goToPage(pageId) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.getElementById(pageId).classList.add('active');
+
+    if (pageId === 'employeeMainPage') loadEmpMainPage();
+    if (pageId === 'employeeChangePage') {
+        loadTireSelector('empChangeTire');
+        setDefaultDateTime('empChangeDate');
+    }
+    if (pageId === 'employeeRepairPage') setDefaultDateTime('empRepairDate');
+    if (pageId === 'employeeOtherPage') setDefaultDateTime('empOtherDate');
+    if (pageId === 'bossMainPage') loadBossMainPage();
+    if (pageId === 'bossRecordPage') {
+        loadTireSelector('bossChangeTire');
+        setDefaultDateTime('bossChangeDate');
+        setDefaultDateTime('bossRepairDate');
+        setDefaultDateTime('bossOtherDate');
+    }
+    if (pageId === 'bossInventoryPage') loadInventory();
+    if (pageId === 'bossAddStockPage') setDefaultDateTime('stockDate');
+    if (pageId === 'bossApprovalPage') loadApprovalList();
+    if (pageId === 'bossHistoryPage') document.getElementById('historyDate').value = getTodayDate();
+    if (pageId === 'bossEmployeeManagePage') loadEmployeeManageList();
+}
+
+function setDefaultDateTime(id) {
+    const now = new Date();
+    const localDateTime = new Date(now.getTime() - now.getTimezoneOffset() * 60000)
+        .toISOString()
+        .slice(0, 16);
+    document.getElementById(id).value = localDateTime;
+}
+
+function getTodayDate() {
+    return new Date().toISOString().slice(0, 10);
+}
+
+function formatDate(dateString) {
+    const date = new Date(dateString);
+    return date.toLocaleString('zh-CN', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit'
+    });
+}
+
+function formatDateShort(dateString) {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('zh-CN', {
+        weekday: 'short',
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric'
+    });
+}
+
+// ==================== 员工注册登录 ====================
+function registerEmployee() {
+    const name = document.getElementById('empRegName').value.trim();
+    const password = document.getElementById('empRegPassword').value;
+    const confirm = document.getElementById('empRegPasswordConfirm').value;
+
+    if (!name || !password) {
+        alert('请填写完整信息！');
+        return;
+    }
+
+    if (password !== confirm) {
+        alert('两次密码不一致！');
+        return;
+    }
+
+    const employees = JSON.parse(localStorage.getItem('employees'));
+
+    if (employees.find(e => e.name === name)) {
+        alert('该员工姓名已存在！');
+        return;
+    }
+
+    employees.push({
+        name: name,
+        password: password,
+        approved: false,
+        registeredAt: new Date().toISOString()
+    });
+
+    localStorage.setItem('employees', JSON.stringify(employees));
+    saveToCloud('employees', employees);
+
+    alert('注册成功！请等待老板审核');
+
+    document.getElementById('empRegName').value = '';
+    document.getElementById('empRegPassword').value = '';
+    document.getElementById('empRegPasswordConfirm').value = '';
+
+    goToPage('employeeLoginPage');
+}
+
+function loginEmployee() {
+    const name = document.getElementById('empLoginName').value.trim();
+    const password = document.getElementById('empLoginPassword').value;
+
+    if (!name || !password) {
+        alert('请输入姓名和密码！');
+        return;
+    }
+
+    const employees = JSON.parse(localStorage.getItem('employees'));
+    const emp = employees.find(e => e.name === name);
+
+    if (!emp) {
+        alert('员工不存在，请先注册！');
+        return;
+    }
+
+    if (emp.password !== password) {
+        alert('密码错误！');
+        return;
+    }
+
+    if (!emp.approved) {
+        alert('账号尚未通过审核，请等待老板批准！');
+        return;
+    }
+
+    localStorage.setItem('currentUser', JSON.stringify({ name: name, role: 'employee' }));
+    localStorage.setItem('autoLogin', 'true');
+
+    goToPage('employeeMainPage');
+}
+
+// ==================== 老板登录 ====================
+function checkBossAutoLogin() {
+    const autoLogin = localStorage.getItem('autoLogin');
+    const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+
+    if (autoLogin === 'true' && currentUser && currentUser.role === 'boss') {
+        goToPage('bossPinPage');
+    } else {
+        goToPage('bossLoginPage');
+    }
+}
+
+function loginBoss() {
+    const password = document.getElementById('bossLoginPassword').value;
+    const correctPassword = localStorage.getItem('bossPassword');
+
+    if (password !== correctPassword) {
+        alert('密码错误！');
+        return;
+    }
+
+    localStorage.setItem('currentUser', JSON.stringify({ name: '老板', role: 'boss' }));
+    localStorage.setItem('autoLogin', 'true');
+
+    goToPage('bossMainPage');
+}
+
+function verifyBossPin() {
+    const pin = document.getElementById('bossPinInput').value;
+    const correctPIN = localStorage.getItem('bossPIN');
+
+    if (pin !== correctPIN) {
+        alert('PIN码错误！');
+        return;
+    }
+
+    goToPage('bossMainPage');
+}
+
+function logout() {
+    localStorage.removeItem('currentUser');
+    localStorage.removeItem('autoLogin');
+    goToPage('welcomePage');
+}
+
+// ==================== 员工端功能 ====================
+function switchEmpTab(tab) {
+    if (tab === 'main') goToPage('employeeMainPage');
+    if (tab === 'change') goToPage('employeeChangePage');
+    if (tab === 'repair') goToPage('employeeRepairPage');
+    if (tab === 'other') goToPage('employeeOtherPage');
+}
+
+function loadEmpMainPage() {
+    const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+    const userName = currentUser.name;
+
+    document.getElementById('empNameDisplay').textContent = `员工端 · ${userName}`;
+    document.getElementById('empNameDisplay2').textContent = `员工端 · ${userName}`;
+    document.getElementById('empNameDisplay3').textContent = `员工端 · ${userName}`;
+    document.getElementById('empNameDisplay4').textContent = `员工端 · ${userName}`;
+
+    const today = getTodayDate();
+    document.getElementById('empTodayDate').textContent = formatDateShort(new Date());
+
+    const changes = JSON.parse(localStorage.getItem('tireChanges'))
+        .filter(r => r.date.startsWith(today) && r.employee === userName);
+    const repairs = JSON.parse(localStorage.getItem('tireRepairs'))
+        .filter(r => r.date.startsWith(today) && r.employee === userName);
+    const others = JSON.parse(localStorage.getItem('otherBusiness'))
+        .filter(r => r.date.startsWith(today) && r.employee === userName);
+
+    const allRecords = [
+        ...changes.map(r => ({...r, type: '换胎'})),
+        ...repairs.map(r => ({...r, type: '补胎'})),
+        ...others.map(r => ({...r, type: '其他业务'}))
+    ].sort((a, b) => new Date(b.date) - new Date(a.date));
+
+    const container = document.getElementById('empTodayRecords');
+
+    if (allRecords.length === 0) {
+        container.innerHTML = '<div class="empty-state"><div class="empty-icon">📝</div><div>暂无记录</div></div>';
+    } else {
+        container.innerHTML = allRecords.map(r => `
+            <div class="record-item">
+                <div class="record-header">
+                    <div class="record-title">${r.type}</div>
+                    <div class="record-price">¥${(r.price || r.amount || 0).toFixed(2)}</div>
+                </div>
+                <div class="record-detail">
+                    ${r.type === '换胎' ? `${r.brand} ${r.model} · ${r.quantity}条` :
+                      r.type === '补胎' ? `${r.quantity}条` :
+                      r.description}<br>
+                    ${new Date(r.date).toLocaleTimeString('zh-CN', {hour: '2-digit', minute: '2-digit'})}
+                </div>
+            </div>
+        `).join('');
+    }
+}
+
+function loadTireSelector(selectId) {
+    const inventory = JSON.parse(localStorage.getItem('inventory'));
+    const select = document.getElementById(selectId);
+
+    let html = '<option value="">-- 请选择 --</option>';
+    inventory.forEach((item, index) => {
+        html += `<option value="${index}">${item.brand} ${item.model} (库存:${item.quantity}条)</option>`;
+    });
+    html += '<option value="other">其他</option>';
+
+    select.innerHTML = html;
+}
+
+function handleEmpTireSelect() {
+    const select = document.getElementById('empChangeTire');
+    const otherInputs = document.getElementById('empChangeOtherInputs');
+
+    if (select.value === 'other') {
+        otherInputs.classList.add('show');
+    } else {
+        otherInputs.classList.remove('show');
+    }
+}
+
+function calcEmpChangeTotal() {
+    const qty = parseFloat(document.getElementById('empChangeQty').value) || 0;
+    const price = parseFloat(document.getElementById('empChangePrice').value) || 0;
+    const total = qty * price;
+    document.getElementById('empChangeTotal').value = total > 0 ? `¥${total.toFixed(2)}` : '';
+}
+
+function submitEmpChange() {
+    const tireIndex = document.getElementById('empChangeTire').value;
+    const qty = parseInt(document.getElementById('empChangeQty').value);
+    const price = parseFloat(document.getElementById('empChangePrice').value);
+    const date = document.getElementById('empChangeDate').value;
+
+    if (!tireIndex || !qty || !price || !date) {
+        alert('请填写完整信息！');
+        return;
+    }
+
+    const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+    let brand, model, isOther = false;
+
+    if (tireIndex === 'other') {
+        brand = document.getElementById('empChangeOtherBrand').value.trim();
+        model = document.getElementById('empChangeOtherModel').value.trim();
+        if (!brand || !model) {
+            alert('请填写品牌和型号！');
+            return;
+        }
+        isOther = true;
+    } else {
+        const inventory = JSON.parse(localStorage.getItem('inventory'));
+        const tire = inventory[parseInt(tireIndex)];
+
+        if (tire.quantity < qty) {
+            alert('库存不足！');
+            return;
+        }
+
+        brand = tire.brand;
+        model = tire.model;
+    }
+
+    const changes = JSON.parse(localStorage.getItem('tireChanges'));
+    changes.push({
+        id: Date.now(),
+        date: date,
+        brand: brand,
+        model: model,
+        quantity: qty,
+        price: qty * price,
+        employee: currentUser.name,
+        createdAt: new Date().toISOString()
+    });
+    localStorage.setItem('tireChanges', JSON.stringify(changes));
+    saveToCloud('tireChanges', changes);
+
+    if (!isOther) {
+        updateInventory(brand, model, -qty);
+    }
+
+    alert('记录成功！');
+    clearEmpChangeForm();
+    loadEmpMainPage();
+    goToPage('employeeMainPage');
+}
+
+function clearEmpChangeForm() {
+    document.getElementById('empChangeTire').value = '';
+    document.getElementById('empChangeOtherInputs').classList.remove('show');
+    document.getElementById('empChangeOtherBrand').value = '';
+    document.getElementById('empChangeOtherModel').value = '';
+    document.getElementById('empChangeQty').value = '';
+    document.getElementById('empChangePrice').value = '';
+    document.getElementById('empChangeTotal').value = '';
+}
+
+function submitEmpRepair() {
+    const date = document.getElementById('empRepairDate').value;
+    const qty = parseInt(document.getElementById('empRepairQty').value);
+    const price = parseFloat(document.getElementById('empRepairPrice').value);
+
+    if (!date || !qty || !price) {
+        alert('请填写完整信息！');
+        return;
+    }
+
+    const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+    const repairs = JSON.parse(localStorage.getItem('tireRepairs'));
+
+    repairs.push({
+        id: Date.now(),
+        date: date,
+        quantity: qty,
+        price: price,
+        employee: currentUser.name,
+        createdAt: new Date().toISOString()
+    });
+
+    localStorage.setItem('tireRepairs', JSON.stringify(repairs));
+    saveToCloud('tireRepairs', repairs);
+
+    alert('记录成功！');
+    document.getElementById('empRepairQty').value = '';
+    document.getElementById('empRepairPrice').value = '';
+    loadEmpMainPage();
+    goToPage('employeeMainPage');
+}
+
+function submitEmpOther() {
+    const date = document.getElementById('empOtherDate').value;
+    const desc = document.getElementById('empOtherDesc').value.trim();
+    const amount = parseFloat(document.getElementById('empOtherAmount').value);
+
+    if (!date || !desc || !amount) {
+        alert('请填写完整信息！');
+        return;
+    }
+
+    const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+    const others = JSON.parse(localStorage.getItem('otherBusiness'));
+
+    others.push({
+        id: Date.now(),
+        date: date,
+        description: desc,
+        amount: amount,
+        employee: currentUser.name,
+        createdAt: new Date().toISOString()
+    });
+
+    localStorage.setItem('otherBusiness', JSON.stringify(others));
+    saveToCloud('otherBusiness', others);
+
+    alert('记录成功！');
+    document.getElementById('empOtherDesc').value = '';
+    document.getElementById('empOtherAmount').value = '';
+    loadEmpMainPage();
+    goToPage('employeeMainPage');
+}
+
+// ==================== 老板端功能 ====================
+function switchBossTab(tab) {
+    if (tab === 'main') goToPage('bossMainPage');
+    if (tab === 'record') goToPage('bossRecordPage');
+    if (tab === 'inventory') goToPage('bossInventoryPage');
+    if (tab === 'more') goToPage('bossMorePage');
+}
+
+function switchBossRecordTab(tab) {
+    const tabs = document.querySelectorAll('#bossRecordPage .tab');
+    tabs.forEach(t => t.classList.remove('active'));
+    event.target.classList.add('active');
+
+    document.getElementById('bossRecordChange').style.display = tab === 'change' ? 'block' : 'none';
+    document.getElementById('bossRecordRepair').style.display = tab === 'repair' ? 'block' : 'none';
+    document.getElementById('bossRecordOther').style.display = tab === 'other' ? 'block' : 'none';
+}
+
+function loadBossMainPage() {
+    const today = getTodayDate();
+    document.getElementById('bossTodayDate').textContent = formatDateShort(new Date());
+
+    const changes = JSON.parse(localStorage.getItem('tireChanges')).filter(r => r.date.startsWith(today));
+    const repairs = JSON.parse(localStorage.getItem('tireRepairs')).filter(r => r.date.startsWith(today));
+    const others = JSON.parse(localStorage.getItem('otherBusiness')).filter(r => r.date.startsWith(today));
+    const inventory = JSON.parse(localStorage.getItem('inventory'));
+
+    let revenue = 0;
+    let cost = 0;
+
+    changes.forEach(r => {
+        revenue += r.price;
+        const item = inventory.find(i =>
+            i.brand === r.brand &&
+            i.model.replace(/\//g, '') === r.model.replace(/\//g, '')
+        );
+        cost += (item ? item.unitPrice : 0) * r.quantity;
+    });
+
+    repairs.forEach(r => revenue += r.price);
+    others.forEach(r => revenue += r.amount);
+
+    const profit = revenue - cost;
+    const orders = changes.length + repairs.length + others.length;
+
+    document.getElementById('bossTodayProfit').textContent = `¥${profit.toFixed(2)}`;
+    document.getElementById('bossTodayRevenue').textContent = `¥${revenue.toFixed(2)}`;
+    document.getElementById('bossTodayOrders').textContent = `${orders} 单`;
+
+    const allRecords = [
+        ...changes.map(r => ({...r, type: '换胎', price: r.price})),
+        ...repairs.map(r => ({...r, type: '补胎'})),
+        ...others.map(r => ({...r, type: '其他业务', price: r.amount}))
+    ].sort((a, b) => new Date(b.date) - new Date(a.date));
+
+    const container = document.getElementById('bossTodayRecords');
+
+    if (allRecords.length === 0) {
+        container.innerHTML = '<div class="empty-state"><div class="empty-icon">📝</div><div>暂无记录</div></div>';
+    } else {
+        container.innerHTML = allRecords.map(r => `
+            <div class="record-item">
+                <div class="record-header">
+                    <div class="record-title">${r.type} - ${r.employee}</div>
+                    <div class="record-price">¥${r.price.toFixed(2)}</div>
+                </div>
+                <div class="record-detail">
+                    ${r.type === '换胎' ? `${r.brand} ${r.model} · ${r.quantity}条` :
+                      r.type === '补胎' ? `${r.quantity}条` :
+                      r.description}<br>
+                    ${new Date(r.date).toLocaleTimeString('zh-CN', {hour: '2-digit', minute: '2-digit'})}
+                </div>
+            </div>
+        `).join('');
+    }
+}
+
+function handleBossTireSelect() {
+    const select = document.getElementById('bossChangeTire');
+    const otherInputs = document.getElementById('bossChangeOtherInputs');
+
+    if (select.value === 'other') {
+        otherInputs.classList.add('show');
+    } else {
+        otherInputs.classList.remove('show');
+    }
+}
+
+function calcBossChangeTotal() {
+    const qty = parseFloat(document.getElementById('bossChangeQty').value) || 0;
+    const price = parseFloat(document.getElementById('bossChangePrice').value) || 0;
+    const total = qty * price;
+    document.getElementById('bossChangeTotal').value = total > 0 ? `¥${total.toFixed(2)}` : '';
+}
+
+function submitBossChange() {
+    const tireIndex = document.getElementById('bossChangeTire').value;
+    const qty = parseInt(document.getElementById('bossChangeQty').value);
+    const price = parseFloat(document.getElementById('bossChangePrice').value);
+    const date = document.getElementById('bossChangeDate').value;
+
+    if (!tireIndex || !qty || !price || !date) {
+        alert('请填写完整信息！');
+        return;
+    }
+
+    let brand, model, isOther = false;
+
+    if (tireIndex === 'other') {
+        brand = document.getElementById('bossChangeOtherBrand').value.trim();
+        model = document.getElementById('bossChangeOtherModel').value.trim();
+        if (!brand || !model) {
+            alert('请填写品牌和型号！');
+            return;
+        }
+        isOther = true;
+    } else {
+        const inventory = JSON.parse(localStorage.getItem('inventory'));
+        const tire = inventory[parseInt(tireIndex)];
+
+        if (tire.quantity < qty) {
+            alert('库存不足！');
+            return;
+        }
+
+        brand = tire.brand;
+        model = tire.model;
+    }
+
+    const changes = JSON.parse(localStorage.getItem('tireChanges'));
+    changes.push({
+        id: Date.now(),
+        date: date,
+        brand: brand,
+        model: model,
+        quantity: qty,
+        price: qty * price,
+        employee: '老板',
+        createdAt: new Date().toISOString()
+    });
+    localStorage.setItem('tireChanges', JSON.stringify(changes));
+    saveToCloud('tireChanges', changes);
+
+    if (!isOther) {
+        updateInventory(brand, model, -qty);
+    }
+
+    alert('记录成功！');
+    clearBossChangeForm();
+    loadBossMainPage();
+}
+
+function clearBossChangeForm() {
+    document.getElementById('bossChangeTire').value = '';
+    document.getElementById('bossChangeOtherInputs').classList.remove('show');
+    document.getElementById('bossChangeOtherBrand').value = '';
+    document.getElementById('bossChangeOtherModel').value = '';
+    document.getElementById('bossChangeQty').value = '';
+    document.getElementById('bossChangePrice').value = '';
+    document.getElementById('bossChangeTotal').value = '';
+}
+
+function submitBossRepair() {
+    const date = document.getElementById('bossRepairDate').value;
+    const qty = parseInt(document.getElementById('bossRepairQty').value);
+    const price = parseFloat(document.getElementById('bossRepairPrice').value);
+
+    if (!date || !qty || !price) {
+        alert('请填写完整信息！');
+        return;
+    }
+
+    const repairs = JSON.parse(localStorage.getItem('tireRepairs'));
+    repairs.push({
+        id: Date.now(),
+        date: date,
+        quantity: qty,
+        price: price,
+        employee: '老板',
+        createdAt: new Date().toISOString()
+    });
+
+    localStorage.setItem('tireRepairs', JSON.stringify(repairs));
+    saveToCloud('tireRepairs', repairs);
+
+    alert('记录成功！');
+    document.getElementById('bossRepairQty').value = '';
+    document.getElementById('bossRepairPrice').value = '';
+    loadBossMainPage();
+}
+
+function submitBossOther() {
+    const date = document.getElementById('bossOtherDate').value;
+    const desc = document.getElementById('bossOtherDesc').value.trim();
+    const amount = parseFloat(document.getElementById('bossOtherAmount').value);
+
+    if (!date || !desc || !amount) {
+        alert('请填写完整信息！');
+        return;
+    }
+
+    const others = JSON.parse(localStorage.getItem('otherBusiness'));
+    others.push({
+        id: Date.now(),
+        date: date,
+        description: desc,
+        amount: amount,
+        employee: '老板',
+        createdAt: new Date().toISOString()
+    });
+
+    localStorage.setItem('otherBusiness', JSON.stringify(others));
+    saveToCloud('otherBusiness', others);
+
+    alert('记录成功！');
+    document.getElementById('bossOtherDesc').value = '';
+    document.getElementById('bossOtherAmount').value = '';
+    loadBossMainPage();
+}
+
+function updateInventory(brand, model, qtyChange, unitPrice = null) {
+    const inventory = JSON.parse(localStorage.getItem('inventory'));
+    const normalizedModel = model.replace(/\//g, '');
+    const index = inventory.findIndex(i =>
+        i.brand === brand && i.model.replace(/\//g, '') === normalizedModel
+    );
+
+    if (index >= 0) {
+        inventory[index].quantity += qtyChange;
+        if (unitPrice !== null) {
+            inventory[index].unitPrice = unitPrice;
+        }
+        if (inventory[index].quantity <= 0) {
+            inventory.splice(index, 1);
+        }
+    } else if (qtyChange > 0) {
+        inventory.push({
+            brand: brand,
+            model: model,
+            quantity: qtyChange,
+            unitPrice: unitPrice || 0
+        });
+    }
+
+    localStorage.setItem('inventory', JSON.stringify(inventory));
+    saveToCloud('inventory', inventory);
+}
+
+function submitStock() {
+    const date = document.getElementById('stockDate').value;
+    const brand = document.getElementById('stockBrand').value.trim();
+    const model = document.getElementById('stockModel').value.trim();
+    const qty = parseInt(document.getElementById('stockQty').value);
+    const price = parseFloat(document.getElementById('stockPrice').value);
+
+    if (!date || !brand || !model || !qty || !price) {
+        alert('请填写完整信息！');
+        return;
+    }
+
+    const records = JSON.parse(localStorage.getItem('stockRecords'));
+    records.push({
+        id: Date.now(),
+        date: date,
+        brand: brand,
+        model: model,
+        quantity: qty,
+        unitPrice: price,
+        totalPrice: qty * price,
+        createdAt: new Date().toISOString()
+    });
+    localStorage.setItem('stockRecords', JSON.stringify(records));
+    saveToCloud('stockRecords', records);
+
+    updateInventory(brand, model, qty, price);
+
+    alert('进货成功！库存已更新');
+    document.getElementById('stockBrand').value = '';
+    document.getElementById('stockModel').value = '';
+    document.getElementById('stockQty').value = '';
+    document.getElementById('stockPrice').value = '';
+
+    switchBossTab('inventory');
+}
+
+function loadInventory() {
+    const inventory = JSON.parse(localStorage.getItem('inventory'));
+    const container = document.getElementById('inventoryList');
+
+    if (inventory.length === 0) {
+        container.innerHTML = '<div class="empty-state"><div class="empty-icon">📦</div><div>暂无库存</div></div>';
+        return;
+    }
+
+    container.innerHTML = inventory.map(item => `
+        <div class="inventory-item">
+            <div class="inventory-info">
+                <div class="inventory-brand">${item.brand}</div>
+                <div class="inventory-model">${item.model}</div>
+                <div class="inventory-price">成本: ¥${item.unitPrice.toFixed(2)}/条</div>
+            </div>
+            <div class="inventory-count">${item.quantity} 条</div>
+        </div>
+    `).join('');
+}
+
+function searchInventory() {
+    const searchTerm = document.getElementById('inventorySearch').value.trim().toLowerCase().replace(/\//g, '');
+    const inventory = JSON.parse(localStorage.getItem('inventory'));
+    const container = document.getElementById('inventoryList');
+
+    if (!searchTerm) {
+        loadInventory();
+        return;
+    }
+
+    const results = inventory.filter(item =>
+        item.brand.toLowerCase().includes(searchTerm) ||
+        item.model.replace(/\//g, '').toLowerCase().includes(searchTerm)
+    );
+
+    if (results.length === 0) {
+        container.innerHTML = '<div class="empty-state"><div class="empty-icon">🔍</div><div>未找到匹配项</div></div>';
+        return;
+    }
+
+    container.innerHTML = results.map(item => `
+        <div class="inventory-item">
+            <div class="inventory-info">
+                <div class="inventory-brand">${item.brand}</div>
+                <div class="inventory-model">${item.model}</div>
+                <div class="inventory-price">成本: ¥${item.unitPrice.toFixed(2)}/条</div>
+            </div>
+            <div class="inventory-count">${item.quantity} 条</div>
+        </div>
+    `).join('');
+}
+
+function loadApprovalList() {
+    const employees = JSON.parse(localStorage.getItem('employees'));
+    const pending = employees.filter(e => !e.approved);
+    const container = document.getElementById('approvalList');
+
+    if (pending.length === 0) {
+        container.innerHTML = '<div class="empty-state"><div class="empty-icon">✓</div><div>暂无待审核</div></div>';
+    } else {
+        container.innerHTML = pending.map(emp => `
+            <div class="record-item">
+                <div class="record-header">
+                    <div class="record-title">${emp.name}</div>
+                </div>
+                <div class="record-detail">注册时间: ${formatDate(emp.registeredAt)}</div>
+                <button class="btn btn-success" style="margin-top: 12px;" onclick="approveEmployee('${emp.name}')">批准</button>
+                <button class="btn btn-secondary" style="margin-top: 8px;" onclick="rejectEmployee('${emp.name}')">拒绝</button>
+            </div>
+        `).join('');
+    }
+}
+
+function approveEmployee(name) {
+    const employees = JSON.parse(localStorage.getItem('employees'));
+    const emp = employees.find(e => e.name === name);
+    if (emp) {
+        emp.approved = true;
+        localStorage.setItem('employees', JSON.stringify(employees));
+        saveToCloud('employees', employees);
+        alert(`已批准 ${name}`);
+        loadApprovalList();
+    }
+}
+
+function rejectEmployee(name) {
+    if (!confirm(`确定拒绝 ${name} 的注册申请吗？`)) return;
+    const employees = JSON.parse(localStorage.getItem('employees'));
+    const updatedEmployees = employees.filter(e => e.name !== name);
+    localStorage.setItem('employees', JSON.stringify(updatedEmployees));
+    saveToCloud('employees', updatedEmployees);
+    alert(`已拒绝 ${name}`);
+    loadApprovalList();
+}
+
+function loadHistoryReport() {
+    const selectedDate = document.getElementById('historyDate').value;
+    if (!selectedDate) {
+        alert('请选择日期！');
+        return;
+    }
+
+    const changes = JSON.parse(localStorage.getItem('tireChanges')).filter(r => r.date.startsWith(selectedDate));
+    const repairs = JSON.parse(localStorage.getItem('tireRepairs')).filter(r => r.date.startsWith(selectedDate));
+    const others = JSON.parse(localStorage.getItem('otherBusiness')).filter(r => r.date.startsWith(selectedDate));
+    const inventory = JSON.parse(localStorage.getItem('inventory'));
+
+    let revenue = 0;
+    let cost = 0;
+
+    changes.forEach(r => {
+        revenue += r.price;
+        const item = inventory.find(i =>
+            i.brand === r.brand &&
+            i.model.replace(/\//g, '') === r.model.replace(/\//g, '')
+        );
+        cost += (item ? item.unitPrice : 0) * r.quantity;
+    });
+
+    const repairRevenue = repairs.reduce((sum, r) => sum + r.price, 0);
+    const otherRevenue = others.reduce((sum, r) => sum + r.amount, 0);
+    revenue += repairRevenue + otherRevenue;
+
+    const profit = revenue - cost;
+
+    const container = document.getElementById('historyDisplay');
+    container.innerHTML = `
+        <div class="profit-card" style="margin: 20px 0;">
+            <div class="profit-label">${selectedDate} 毛利</div>
+            <div class="profit-value">¥${profit.toFixed(2)}</div>
+        </div>
+        <div class="record-item">
+            <div class="record-header">
+                <div class="record-title">换胎业务</div>
+            </div>
+            <div class="record-detail">
+                销售额: ¥${changes.reduce((sum, r) => sum + r.price, 0).toFixed(2)}<br>
+                成本: ¥${cost.toFixed(2)}<br>
+                利润: ¥${(changes.reduce((sum, r) => sum + r.price, 0) - cost).toFixed(2)}<br>
+                换胎数量: ${changes.reduce((sum, r) => sum + r.quantity, 0)} 条
+            </div>
+        </div>
+        <div class="record-item">
+            <div class="record-header">
+                <div class="record-title">补胎业务</div>
+            </div>
+            <div class="record-detail">
+                收入: ¥${repairRevenue.toFixed(2)}<br>
+                补胎数量: ${repairs.reduce((sum, r) => sum + r.quantity, 0)} 条
+            </div>
+        </div>
+        <div class="record-item">
+            <div class="record-header">
+                <div class="record-title">其他业务</div>
+            </div>
+            <div class="record-detail">
+                收入: ¥${otherRevenue.toFixed(2)}<br>
+                业务数量: ${others.length} 单
+            </div>
+        </div>
+    `;
+}
+
+function loadEmployeeManageList() {
+    const employees = JSON.parse(localStorage.getItem('employees')).filter(e => e.approved);
+    const changes = JSON.parse(localStorage.getItem('tireChanges'));
+    const repairs = JSON.parse(localStorage.getItem('tireRepairs'));
+    const others = JSON.parse(localStorage.getItem('otherBusiness'));
+
+    const container = document.getElementById('employeeManageList');
+
+    if (employees.length === 0) {
+        container.innerHTML = '<div class="empty-state"><div class="empty-icon">👥</div><div>暂无员工</div></div>';
+    } else {
+        container.innerHTML = employees.map(emp => {
+            const empChanges = changes.filter(r => r.employee === emp.name);
+            const empRepairs = repairs.filter(r => r.employee === emp.name);
+            const empOthers = others.filter(r => r.employee === emp.name);
+
+            const totalRevenue = empChanges.reduce((sum, r) => sum + r.price, 0) +
+                                empRepairs.reduce((sum, r) => sum + r.price, 0) +
+                                empOthers.reduce((sum, r) => sum + r.amount, 0);
+            const totalOrders = empChanges.length + empRepairs.length + empOthers.length;
+
+            return `
+                <div class="record-item">
+                    <div class="record-header">
+                        <div class="record-title">${emp.name}</div>
+                        <span class="approved-badge" style="background: #34d399;">已审核</span>
+                    </div>
+                    <div class="record-detail">
+                        注册于: ${formatDate(emp.registeredAt)}<br>
+                        总销售额: ¥${totalRevenue.toFixed(2)}<br>
+                        总单量: ${totalOrders} 单
+                    </div>
+                    <button class="btn btn-secondary" style="margin-top: 12px;" onclick="resetEmployeePassword('${emp.name}')">重置密码</button>
+                    <button class="btn btn-danger" style="margin-top: 8px;" onclick="deleteEmployee('${emp.name}')">删除员工</button>
+                </div>
+            `;
+        }).join('');
+    }
+}
+
+function resetEmployeePassword(name) {
+    if (!confirm(`确定重置 ${name} 的密码吗？密码将重置为：123456`)) return;
+
+    const employees = JSON.parse(localStorage.getItem('employees'));
+    const emp = employees.find(e => e.name === name);
+    if (emp) {
+        emp.password = '123456';
+        localStorage.setItem('employees', JSON.stringify(employees));
+        saveToCloud('employees', employees);
+        alert(`已重置 ${name} 的密码为：123456`);
+    }
+}
+
+function deleteEmployee(name) {
+    if (!confirm(`确定删除员工 ${name} 吗？此操作不可恢复！`)) return;
+
+    const employees = JSON.parse(localStorage.getItem('employees'));
+    const updatedEmployees = employees.filter(e => e.name !== name);
+    localStorage.setItem('employees', JSON.stringify(updatedEmployees));
+    saveToCloud('employees', updatedEmployees);
+    alert(`已删除员工 ${name}`);
+    loadEmployeeManageList();
+}
+
+function changeBossPassword() {
+    const current = document.getElementById('currentPassword').value;
+    const newPwd = document.getElementById('newPassword').value;
+    const confirm = document.getElementById('confirmNewPassword').value;
+
+    if (!current || !newPwd || !confirm) {
+        alert('请填写完整信息！');
+        return;
+    }
+
+    if (current !== localStorage.getItem('bossPassword')) {
+        alert('当前密码错误！');
+        return;
+    }
+
+    if (newPwd !== confirm) {
+        alert('两次新密码不一致！');
+        return;
+    }
+
+    localStorage.setItem('bossPassword', newPwd);
+    localStorage.removeItem('autoLogin');
+
+    alert('密码修改成功！请重新登录');
+    document.getElementById('currentPassword').value = '';
+    document.getElementById('newPassword').value = '';
+    document.getElementById('confirmNewPassword').value = '';
+
+    logout();
+}
+
+function clearAllData() {
+    if (!confirm('此操作将删除所有数据且不可恢复！确定继续吗？')) return;
+    if (!confirm('最后确认：真的要清空所有数据吗？')) return;
+
+    localStorage.clear();
+    alert('所有数据已清空！');
+    location.reload();
+}
+
+// ==================== 页面加载初始化 ====================
+window.initMainApp = async function() {
+    initData();
+
+    // 从云端加载数据
+    if (window.firebaseDB) {
+        showSyncIndicator('syncing');
+
+        const keys = ['employees', 'tireChanges', 'tireRepairs', 'otherBusiness', 'stockRecords', 'inventory', 'bossPassword', 'bossPIN'];
+
+        for (const key of keys) {
+            const cloudData = await loadFromCloud(key);
+            if (cloudData !== null) {
+                const dataString = typeof cloudData === 'string' ? cloudData : JSON.stringify(cloudData);
+                localStorage.setItem(key, dataString);
+            }
+        }
+
+        showSyncIndicator('success');
+
+        // 设置实时同步
+        setupRealtimeSync();
+    }
+
+    const autoLogin = localStorage.getItem('autoLogin');
+    const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+
+    if (autoLogin === 'true' && currentUser) {
+        if (currentUser.role === 'employee') {
+            const employees = JSON.parse(localStorage.getItem('employees'));
+            const emp = employees.find(e => e.name === currentUser.name && e.approved);
+            if (emp) {
+                goToPage('employeeMainPage');
+            } else {
+                localStorage.removeItem('currentUser');
+                localStorage.removeItem('autoLogin');
+                goToPage('welcomePage');
+            }
+        } else if (currentUser.role === 'boss') {
+            goToPage('bossMainPage');
+        }
+    } else {
+        goToPage('welcomePage');
+    }
+};
+
+// 等待Firebase初始化后再执行主应用初始化
+setTimeout(() => {
+    window.initMainApp();
+}, 500);
+    </script>
+</body>
+</html>
