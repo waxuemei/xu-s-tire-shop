@@ -651,7 +651,40 @@
         window.firestoreCollection = collection;
         window.firestoreServerTimestamp = serverTimestamp;
 
-        console.log('Firebase Firestore initialized successfully');
+        console.log('✅ Firebase Firestore initialized successfully');
+        console.log('✅ Firestore database:', db);
+        console.log('📝 请确保已在Firebase Console创建Firestore数据库');
+        console.log('📝 项目: finance-7c50c');
+
+        // 测试Firestore连接
+        setTimeout(async () => {
+            try {
+                const testRef = doc(db, 'test', 'connection');
+                await setDoc(testRef, { test: true, timestamp: new Date().toISOString() });
+                console.log('✅ Firestore连接测试成功！可以开始使用云端同步功能');
+                console.log('✅ 数据将保存到: https://console.firebase.google.com/project/finance-7c50c/firestore');
+            } catch (error) {
+                console.error('❌ Firestore连接失败:', error);
+                console.error('❌ 错误信息:', error.message);
+                console.error('');
+                console.error('🔧 请按以下步骤操作：');
+                console.error('1. 访问 https://console.firebase.google.com/project/finance-7c50c/firestore');
+                console.error('2. 如果显示"开始使用"按钮，点击它');
+                console.error('3. 选择"以测试模式启动"');
+                console.error('4. 位置选择 asia-east1 (香港)');
+                console.error('5. 点击"启用"');
+                console.error('6. 等待数据库创建完成后，刷新此页面');
+                console.error('');
+                alert('⚠️ Firestore数据库未创建或权限错误\n\n' +
+                      '请访问Firebase Console创建Firestore数据库：\n\n' +
+                      '1. 打开 Firebase Console\n' +
+                      '2. 项目: finance-7c50c\n' +
+                      '3. Firestore Database → 创建数据库\n' +
+                      '4. 选择"测试模式"\n' +
+                      '5. 刷新页面\n\n' +
+                      '详细错误: ' + error.message);
+            }
+        }, 1000);
     </script>
 </head>
 <body>
@@ -1448,15 +1481,45 @@ function setupRealtimeSync() {
                     localStorage.setItem(key, cloudData);
                     console.log('Real-time sync updated:', key);
 
-                    // 如果当前页面需要刷新数据
+                    // 刷新当前激活的页面
                     const activePage = document.querySelector('.page.active');
                     if (activePage) {
                         const pageId = activePage.id;
-                        if (pageId === 'employeeMainPage') loadEmpMainPage();
-                        if (pageId === 'bossMainPage') loadBossMainPage();
-                        if (pageId === 'bossInventoryPage') loadInventory();
-                        if (pageId === 'bossApprovalPage') loadApprovalList();
-                        if (pageId === 'bossEmployeeManagePage') loadEmployeeManageList();
+
+                        // 员工主页刷新
+                        if (pageId === 'employeeMainPage') {
+                            loadEmpMainPage();
+                        }
+
+                        // 老板主页刷新（概览页面）
+                        if (pageId === 'bossMainPage') {
+                            loadBossMainPage();
+                        }
+
+                        // 仓库页面刷新
+                        if (pageId === 'bossInventoryPage') {
+                            loadInventory();
+                        }
+
+                        // 审核页面刷新
+                        if (pageId === 'bossApprovalPage') {
+                            loadApprovalList();
+                        }
+
+                        // 员工管理页面刷新
+                        if (pageId === 'bossEmployeeManagePage') {
+                            loadEmployeeManageList();
+                        }
+                    }
+
+                    // 特别处理：如果业务数据更新，且用户是老板，强制更新概览数据
+                    // 这样即使不在概览页面，数据也会在后台更新，切换回来时立即可见
+                    const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+                    if (currentUser && currentUser.role === 'boss') {
+                        if (key === 'tireChanges' || key === 'tireRepairs' || key === 'otherBusiness' || key === 'inventory') {
+                            // 静默更新概览数据（不切换页面）
+                            updateBossStatsSilently();
+                        }
                     }
                 }
             }
@@ -1932,6 +1995,44 @@ function switchBossRecordTab(tab) {
     document.getElementById('bossRecordChange').style.display = tab === 'change' ? 'block' : 'none';
     document.getElementById('bossRecordRepair').style.display = tab === 'repair' ? 'block' : 'none';
     document.getElementById('bossRecordOther').style.display = tab === 'other' ? 'block' : 'none';
+}
+
+// 静默更新老板端统计数据（不刷新页面）
+function updateBossStatsSilently() {
+    const today = getTodayDate();
+    const changes = JSON.parse(localStorage.getItem('tireChanges')).filter(r => r.date.startsWith(today));
+    const repairs = JSON.parse(localStorage.getItem('tireRepairs')).filter(r => r.date.startsWith(today));
+    const others = JSON.parse(localStorage.getItem('otherBusiness')).filter(r => r.date.startsWith(today));
+    const inventory = JSON.parse(localStorage.getItem('inventory'));
+
+    let revenue = 0;
+    let cost = 0;
+
+    changes.forEach(r => {
+        revenue += r.price;
+        const item = inventory.find(i =>
+            i.brand === r.brand &&
+            i.model.replace(/\//g, '') === r.model.replace(/\//g, '')
+        );
+        cost += (item ? item.unitPrice : 0) * r.quantity;
+    });
+
+    repairs.forEach(r => revenue += r.price);
+    others.forEach(r => revenue += r.amount);
+
+    const profit = revenue - cost;
+    const orders = changes.length + repairs.length + others.length;
+
+    // 只更新DOM元素，不刷新整个页面
+    const profitEl = document.getElementById('bossTodayProfit');
+    const revenueEl = document.getElementById('bossTodayRevenue');
+    const ordersEl = document.getElementById('bossTodayOrders');
+
+    if (profitEl) profitEl.textContent = `¥${profit.toFixed(2)}`;
+    if (revenueEl) revenueEl.textContent = `¥${revenue.toFixed(2)}`;
+    if (ordersEl) ordersEl.textContent = `${orders} 单`;
+
+    console.log('📊 静默更新统计数据:', { profit, revenue, orders });
 }
 
 function loadBossMainPage() {
