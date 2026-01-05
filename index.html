@@ -1452,20 +1452,26 @@ async function saveToCloud(key, data) {
 
 async function loadFromCloud(key) {
     if (!window.firestoreDB) {
-        console.warn('Firestore not initialized');
+        console.error('❌ loadFromCloud: Firestore未初始化');
         return null;
     }
 
     try {
         const docRef = window.firestoreDoc(window.firestoreDB, key, 'data');
+        console.log(`  🔍 查询云端文档: ${key}/data`);
+
         const docSnap = await window.firestoreGetDoc(docRef);
 
         if (docSnap.exists()) {
-            return docSnap.data().content;
+            const content = docSnap.data().content;
+            console.log(`  ✅ 找到云端数据:`, Array.isArray(content) ? `${content.length}条记录` : typeof content);
+            return content;
+        } else {
+            console.log(`  ⚠️ 云端文档不存在: ${key}/data`);
+            return null;
         }
-        return null;
     } catch (error) {
-        console.error('Firestore load error:', error);
+        console.error(`  ❌ 加载 ${key} 失败:`, error.message);
         return null;
     }
 }
@@ -1665,7 +1671,7 @@ function formatDateShort(dateString) {
 }
 
 // ==================== 员工注册登录 ====================
-function registerEmployee() {
+async function registerEmployee() {
     const name = document.getElementById('empRegName').value.trim();
     const password = document.getElementById('empRegPassword').value;
     const confirm = document.getElementById('empRegPasswordConfirm').value;
@@ -1695,7 +1701,9 @@ function registerEmployee() {
     });
 
     localStorage.setItem('employees', JSON.stringify(employees));
-    saveToCloud('employees', employees);
+
+    // ⚡ 等待云端保存完成
+    await saveToCloud('employees', employees);
 
     alert('注册成功！请等待老板审核');
 
@@ -1870,7 +1878,7 @@ function calcEmpChangeTotal() {
     document.getElementById('empChangeTotal').value = total > 0 ? `¥${total.toFixed(2)}` : '';
 }
 
-function submitEmpChange() {
+async function submitEmpChange() {
     const tireIndex = document.getElementById('empChangeTire').value;
     const qty = parseInt(document.getElementById('empChangeQty').value);
     const price = parseFloat(document.getElementById('empChangePrice').value);
@@ -1917,10 +1925,12 @@ function submitEmpChange() {
         createdAt: new Date().toISOString()
     });
     localStorage.setItem('tireChanges', JSON.stringify(changes));
-    saveToCloud('tireChanges', changes);
+
+    // ⚡ 等待云端保存完成
+    await saveToCloud('tireChanges', changes);
 
     if (!isOther) {
-        updateInventory(brand, model, -qty);
+        await updateInventory(brand, model, -qty);
     }
 
     alert('记录成功！');
@@ -1939,7 +1949,7 @@ function clearEmpChangeForm() {
     document.getElementById('empChangeTotal').value = '';
 }
 
-function submitEmpRepair() {
+async function submitEmpRepair() {
     const date = document.getElementById('empRepairDate').value;
     const qty = parseInt(document.getElementById('empRepairQty').value);
     const price = parseFloat(document.getElementById('empRepairPrice').value);
@@ -1962,7 +1972,7 @@ function submitEmpRepair() {
     });
 
     localStorage.setItem('tireRepairs', JSON.stringify(repairs));
-    saveToCloud('tireRepairs', repairs);
+    await saveToCloud('tireRepairs', repairs);
 
     alert('记录成功！');
     document.getElementById('empRepairQty').value = '';
@@ -1971,7 +1981,7 @@ function submitEmpRepair() {
     goToPage('employeeMainPage');
 }
 
-function submitEmpOther() {
+async function submitEmpOther() {
     const date = document.getElementById('empOtherDate').value;
     const desc = document.getElementById('empOtherDesc').value.trim();
     const amount = parseFloat(document.getElementById('empOtherAmount').value);
@@ -1994,7 +2004,7 @@ function submitEmpOther() {
     });
 
     localStorage.setItem('otherBusiness', JSON.stringify(others));
-    saveToCloud('otherBusiness', others);
+    await saveToCloud('otherBusiness', others);
 
     alert('记录成功！');
     document.getElementById('empOtherDesc').value = '';
@@ -2172,7 +2182,7 @@ function calcBossChangeTotal() {
     document.getElementById('bossChangeTotal').value = total > 0 ? `¥${total.toFixed(2)}` : '';
 }
 
-function submitBossChange() {
+async function submitBossChange() {
     const tireIndex = document.getElementById('bossChangeTire').value;
     const qty = parseInt(document.getElementById('bossChangeQty').value);
     const price = parseFloat(document.getElementById('bossChangePrice').value);
@@ -2218,10 +2228,10 @@ function submitBossChange() {
         createdAt: new Date().toISOString()
     });
     localStorage.setItem('tireChanges', JSON.stringify(changes));
-    saveToCloud('tireChanges', changes);
+    await saveToCloud('tireChanges', changes);
 
     if (!isOther) {
-        updateInventory(brand, model, -qty);
+        await updateInventory(brand, model, -qty);
     }
 
     alert('记录成功！');
@@ -2239,7 +2249,7 @@ function clearBossChangeForm() {
     document.getElementById('bossChangeTotal').value = '';
 }
 
-function submitBossRepair() {
+async function submitBossRepair() {
     const date = document.getElementById('bossRepairDate').value;
     const qty = parseInt(document.getElementById('bossRepairQty').value);
     const price = parseFloat(document.getElementById('bossRepairPrice').value);
@@ -2260,7 +2270,7 @@ function submitBossRepair() {
     });
 
     localStorage.setItem('tireRepairs', JSON.stringify(repairs));
-    saveToCloud('tireRepairs', repairs);
+    await saveToCloud('tireRepairs', repairs);
 
     alert('记录成功！');
     document.getElementById('bossRepairQty').value = '';
@@ -2268,7 +2278,7 @@ function submitBossRepair() {
     loadBossMainPage();
 }
 
-function submitBossOther() {
+async function submitBossOther() {
     const date = document.getElementById('bossOtherDate').value;
     const desc = document.getElementById('bossOtherDesc').value.trim();
     const amount = parseFloat(document.getElementById('bossOtherAmount').value);
@@ -2289,7 +2299,7 @@ function submitBossOther() {
     });
 
     localStorage.setItem('otherBusiness', JSON.stringify(others));
-    saveToCloud('otherBusiness', others);
+    await saveToCloud('otherBusiness', others);
 
     alert('记录成功！');
     document.getElementById('bossOtherDesc').value = '';
@@ -2297,7 +2307,7 @@ function submitBossOther() {
     loadBossMainPage();
 }
 
-function updateInventory(brand, model, qtyChange, unitPrice = null) {
+async function updateInventory(brand, model, qtyChange, unitPrice = null) {
     const inventory = JSON.parse(localStorage.getItem('inventory'));
     const normalizedModel = model.replace(/\//g, '');
     const index = inventory.findIndex(i =>
@@ -2322,10 +2332,10 @@ function updateInventory(brand, model, qtyChange, unitPrice = null) {
     }
 
     localStorage.setItem('inventory', JSON.stringify(inventory));
-    saveToCloud('inventory', inventory);
+    await saveToCloud('inventory', inventory);
 }
 
-function submitStock() {
+async function submitStock() {
     const date = document.getElementById('stockDate').value;
     const brand = document.getElementById('stockBrand').value.trim();
     const model = document.getElementById('stockModel').value.trim();
@@ -2349,9 +2359,9 @@ function submitStock() {
         createdAt: new Date().toISOString()
     });
     localStorage.setItem('stockRecords', JSON.stringify(records));
-    saveToCloud('stockRecords', records);
+    await saveToCloud('stockRecords', records);
 
-    updateInventory(brand, model, qty, price);
+    await updateInventory(brand, model, qty, price);
 
     alert('进货成功！库存已更新');
     document.getElementById('stockBrand').value = '';
@@ -2436,24 +2446,24 @@ function loadApprovalList() {
     }
 }
 
-function approveEmployee(name) {
+async function approveEmployee(name) {
     const employees = JSON.parse(localStorage.getItem('employees'));
     const emp = employees.find(e => e.name === name);
     if (emp) {
         emp.approved = true;
         localStorage.setItem('employees', JSON.stringify(employees));
-        saveToCloud('employees', employees);
+        await saveToCloud('employees', employees);
         alert(`已批准 ${name}`);
         loadApprovalList();
     }
 }
 
-function rejectEmployee(name) {
+async function rejectEmployee(name) {
     if (!confirm(`确定拒绝 ${name} 的注册申请吗？`)) return;
     const employees = JSON.parse(localStorage.getItem('employees'));
     const updatedEmployees = employees.filter(e => e.name !== name);
     localStorage.setItem('employees', JSON.stringify(updatedEmployees));
-    saveToCloud('employees', updatedEmployees);
+    await saveToCloud('employees', updatedEmployees);
     alert(`已拒绝 ${name}`);
     loadApprovalList();
 }
@@ -2566,7 +2576,7 @@ function loadEmployeeManageList() {
     }
 }
 
-function resetEmployeePassword(name) {
+async function resetEmployeePassword(name) {
     if (!confirm(`确定重置 ${name} 的密码吗？密码将重置为：123456`)) return;
 
     const employees = JSON.parse(localStorage.getItem('employees'));
@@ -2574,23 +2584,23 @@ function resetEmployeePassword(name) {
     if (emp) {
         emp.password = '123456';
         localStorage.setItem('employees', JSON.stringify(employees));
-        saveToCloud('employees', employees);
+        await saveToCloud('employees', employees);
         alert(`已重置 ${name} 的密码为：123456`);
     }
 }
 
-function deleteEmployee(name) {
+async function deleteEmployee(name) {
     if (!confirm(`确定删除员工 ${name} 吗？此操作不可恢复！`)) return;
 
     const employees = JSON.parse(localStorage.getItem('employees'));
     const updatedEmployees = employees.filter(e => e.name !== name);
     localStorage.setItem('employees', JSON.stringify(updatedEmployees));
-    saveToCloud('employees', updatedEmployees);
+    await saveToCloud('employees', updatedEmployees);
     alert(`已删除员工 ${name}`);
     loadEmployeeManageList();
 }
 
-function changeBossPassword() {
+async function changeBossPassword() {
     const current = document.getElementById('currentPassword').value;
     const newPwd = document.getElementById('newPassword').value;
     const confirm = document.getElementById('confirmNewPassword').value;
@@ -2611,7 +2621,7 @@ function changeBossPassword() {
     }
 
     localStorage.setItem('bossPassword', newPwd);
-    saveToCloud('bossPassword', newPwd);
+    await saveToCloud('bossPassword', newPwd);
     localStorage.removeItem('autoLogin');
 
     alert('密码修改成功！请重新登录');
@@ -2633,26 +2643,40 @@ function clearAllData() {
 
 // ==================== 页面加载初始化 ====================
 window.initMainApp = async function() {
+    console.log('🚀 ========== 应用初始化开始 ==========');
+
     initData();
+    console.log('✅ 本地数据初始化完成');
 
     // 从云端加载数据
     if (window.firestoreDB) {
+        console.log('☁️ Firestore已连接，开始从云端加载数据...');
         showSyncIndicator('syncing');
 
         const keys = ['employees', 'tireChanges', 'tireRepairs', 'otherBusiness', 'stockRecords', 'inventory', 'bossPassword', 'bossPIN'];
 
         for (const key of keys) {
+            console.log(`📥 正在加载 ${key}...`);
             const cloudData = await loadFromCloud(key);
+
             if (cloudData !== null) {
                 const dataString = typeof cloudData === 'string' ? cloudData : JSON.stringify(cloudData);
                 localStorage.setItem(key, dataString);
+                console.log(`✅ ${key} 已从云端加载:`, Array.isArray(cloudData) ? `${cloudData.length}条记录` : '非数组数据');
+            } else {
+                console.log(`⚠️ ${key} 云端无数据，使用本地初始值`);
             }
         }
 
         showSyncIndicator('success');
+        console.log('☁️ 云端数据加载完成！');
 
         // 设置实时同步
         setupRealtimeSync();
+        console.log('🔄 实时同步已启动');
+    } else {
+        console.error('❌ Firestore未初始化！无法加载云端数据');
+        alert('⚠️ 云端数据库未连接，仅使用本地数据');
     }
 
     const autoLogin = localStorage.getItem('autoLogin');
