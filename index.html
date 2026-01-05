@@ -1479,35 +1479,42 @@ function setupRealtimeSync() {
 
                 if (currentData !== cloudData) {
                     localStorage.setItem(key, cloudData);
-                    console.log('Real-time sync updated:', key);
+                    console.log('🔥 实时同步更新:', key);
+                    console.log('📦 云端数据长度:', cloudData.length);
 
                     // 刷新当前激活的页面
                     const activePage = document.querySelector('.page.active');
-                    if (activePage) {
-                        const pageId = activePage.id;
+                    const pageId = activePage ? activePage.id : 'none';
+                    console.log('📄 当前激活页面:', pageId);
 
+                    if (activePage) {
                         // 员工主页刷新
                         if (pageId === 'employeeMainPage') {
+                            console.log('🔄 刷新员工主页');
                             loadEmpMainPage();
                         }
 
                         // 老板主页刷新（概览页面）
                         if (pageId === 'bossMainPage') {
+                            console.log('🔄 刷新老板主页');
                             loadBossMainPage();
                         }
 
                         // 仓库页面刷新
                         if (pageId === 'bossInventoryPage') {
+                            console.log('🔄 刷新仓库页面');
                             loadInventory();
                         }
 
                         // 审核页面刷新
                         if (pageId === 'bossApprovalPage') {
+                            console.log('🔄 刷新审核页面');
                             loadApprovalList();
                         }
 
                         // 员工管理页面刷新
                         if (pageId === 'bossEmployeeManagePage') {
+                            console.log('🔄 刷新员工管理页面');
                             loadEmployeeManageList();
                         }
                     }
@@ -1515,12 +1522,16 @@ function setupRealtimeSync() {
                     // 特别处理：如果业务数据更新，且用户是老板，强制更新概览数据
                     // 这样即使不在概览页面，数据也会在后台更新，切换回来时立即可见
                     const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+                    console.log('👤 当前用户:', currentUser);
                     if (currentUser && currentUser.role === 'boss') {
                         if (key === 'tireChanges' || key === 'tireRepairs' || key === 'otherBusiness' || key === 'inventory') {
+                            console.log('💼 老板身份，触发静默更新，数据类型:', key);
                             // 静默更新概览数据（不切换页面）
                             updateBossStatsSilently();
                         }
                     }
+                } else {
+                    console.log('⏭️ 跳过同步 (数据相同):', key);
                 }
             }
         });
@@ -1999,11 +2010,18 @@ function switchBossRecordTab(tab) {
 
 // 静默更新老板端统计数据（不刷新页面）
 function updateBossStatsSilently() {
+    console.log('🔄 触发静默更新...');
     const today = getTodayDate();
     const changes = JSON.parse(localStorage.getItem('tireChanges')).filter(r => r.date.startsWith(today));
     const repairs = JSON.parse(localStorage.getItem('tireRepairs')).filter(r => r.date.startsWith(today));
     const others = JSON.parse(localStorage.getItem('otherBusiness')).filter(r => r.date.startsWith(today));
     const inventory = JSON.parse(localStorage.getItem('inventory'));
+
+    console.log('📊 静默更新数据源:');
+    console.log('今日日期:', today);
+    console.log('换胎记录:', changes.length);
+    console.log('补胎记录:', repairs.length);
+    console.log('其他业务:', others.length);
 
     let revenue = 0;
     let cost = 0;
@@ -2028,11 +2046,14 @@ function updateBossStatsSilently() {
     const revenueEl = document.getElementById('bossTodayRevenue');
     const ordersEl = document.getElementById('bossTodayOrders');
 
+    console.log('💰 计算结果: 营业额=¥' + revenue + ', 成本=¥' + cost + ', 利润=¥' + profit + ', 单量=' + orders);
+    console.log('🎯 DOM元素存在:', { profitEl: !!profitEl, revenueEl: !!revenueEl, ordersEl: !!ordersEl });
+
     if (profitEl) profitEl.textContent = `¥${profit.toFixed(2)}`;
     if (revenueEl) revenueEl.textContent = `¥${revenue.toFixed(2)}`;
     if (ordersEl) ordersEl.textContent = `${orders} 单`;
 
-    console.log('📊 静默更新统计数据:', { profit, revenue, orders });
+    console.log('✅ 静默更新完成');
 }
 
 function loadBossMainPage() {
@@ -2044,6 +2065,13 @@ function loadBossMainPage() {
     const others = JSON.parse(localStorage.getItem('otherBusiness')).filter(r => r.date.startsWith(today));
     const inventory = JSON.parse(localStorage.getItem('inventory'));
 
+    console.log('📊 loadBossMainPage 调试信息:');
+    console.log('今日日期:', today);
+    console.log('换胎记录数:', changes.length, changes);
+    console.log('补胎记录数:', repairs.length, repairs);
+    console.log('其他业务数:', others.length, others);
+    console.log('库存数据:', inventory);
+
     let revenue = 0;
     let cost = 0;
 
@@ -2053,14 +2081,28 @@ function loadBossMainPage() {
             i.brand === r.brand &&
             i.model.replace(/\//g, '') === r.model.replace(/\//g, '')
         );
-        cost += (item ? item.unitPrice : 0) * r.quantity;
+        const itemCost = (item ? item.unitPrice : 0) * r.quantity;
+        cost += itemCost;
+        console.log(`换胎: ${r.brand} ${r.model}, 收费:¥${r.price}, 成本:¥${itemCost}, 员工:${r.employee}`);
     });
 
-    repairs.forEach(r => revenue += r.price);
-    others.forEach(r => revenue += r.amount);
+    repairs.forEach(r => {
+        revenue += r.price;
+        console.log(`补胎: ${r.quantity}条, 收费:¥${r.price}, 员工:${r.employee}`);
+    });
+
+    others.forEach(r => {
+        revenue += r.amount;
+        console.log(`其他: ${r.description}, 收费:¥${r.amount}, 员工:${r.employee}`);
+    });
 
     const profit = revenue - cost;
     const orders = changes.length + repairs.length + others.length;
+
+    console.log('总营业额:', revenue);
+    console.log('总成本:', cost);
+    console.log('毛利:', profit);
+    console.log('单量:', orders);
 
     document.getElementById('bossTodayProfit').textContent = `¥${profit.toFixed(2)}`;
     document.getElementById('bossTodayRevenue').textContent = `¥${revenue.toFixed(2)}`;
