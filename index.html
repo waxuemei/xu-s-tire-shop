@@ -1422,22 +1422,31 @@
 // ==================== Firestore云端同步函数 ====================
 async function saveToCloud(key, data) {
     if (!window.firestoreDB) {
-        console.warn('Firestore not initialized');
+        console.error('❌ Firestore未初始化，无法保存数据');
+        alert('⚠️ 云端同步未启动，数据仅保存在本地');
         return;
     }
 
     try {
+        console.log('📤 准备上传数据到云端:', key);
+        console.log('📦 数据内容:', data);
         showSyncIndicator('syncing');
+
         const docRef = window.firestoreDoc(window.firestoreDB, key, 'data');
         await window.firestoreSetDoc(docRef, {
             content: data,
             updatedAt: window.firestoreServerTimestamp()
         });
+
         showSyncIndicator('success');
-        console.log('Data saved to Firestore:', key);
+        console.log('✅ 数据已成功保存到Firestore:', key);
+        console.log('✅ 保存的记录数:', Array.isArray(data) ? data.length : 'N/A');
     } catch (error) {
-        console.error('Firestore sync error:', error);
+        console.error('❌ Firestore同步失败:', error);
+        console.error('❌ 错误详情:', error.message);
+        console.error('❌ 失败的数据类型:', key);
         showSyncIndicator('error');
+        alert('⚠️ 云端同步失败: ' + error.message + '\n数据已保存在本地');
     }
 }
 
@@ -1627,7 +1636,11 @@ function setDefaultDateTime(id) {
 }
 
 function getTodayDate() {
-    return new Date().toISOString().slice(0, 10);
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
 }
 
 function formatDate(dateString) {
@@ -2065,8 +2078,13 @@ function loadBossMainPage() {
     const others = JSON.parse(localStorage.getItem('otherBusiness')).filter(r => r.date.startsWith(today));
     const inventory = JSON.parse(localStorage.getItem('inventory'));
 
-    console.log('📊 loadBossMainPage 调试信息:');
-    console.log('今日日期:', today);
+    console.log('📊 ========== loadBossMainPage 调试信息 ==========');
+    console.log('🗓️ 今日日期 (过滤条件):', today);
+    console.log('📝 全部换胎记录:', JSON.parse(localStorage.getItem('tireChanges')));
+    console.log('🔧 全部补胎记录:', JSON.parse(localStorage.getItem('tireRepairs')));
+    console.log('✨ 全部其他业务:', JSON.parse(localStorage.getItem('otherBusiness')));
+    console.log('');
+    console.log('🎯 过滤后的今日记录:');
     console.log('换胎记录数:', changes.length, changes);
     console.log('补胎记录数:', repairs.length, repairs);
     console.log('其他业务数:', others.length, others);
